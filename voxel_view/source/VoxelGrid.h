@@ -12,6 +12,7 @@ public:
   unsigned int width, height, depth;
   std::vector<unsigned char> volume;
   
+  //Add these manually
   std::vector < vec4 > vertices;
   std::vector < vec3 > normals;
   std::vector < vec3 > colors;
