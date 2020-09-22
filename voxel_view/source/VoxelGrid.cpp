@@ -198,67 +198,17 @@ void VoxelGrid::createColors(){
 		for (unsigned int y = 0; y < height; y++) {
 			for (unsigned int z = 0; z < depth; z++) {
 				if (volume[(x + y * width + z * width*height) * 4 + 3] != 0) {
-					//Back face
-					//Triangle 1
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					//Triangle 2
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-
-					//Front face
-					//Triangle 1
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					//Triangle 2
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-
-					//Top face
-					//Triangle 1
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					//Triangle 2
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-
-					//Bottom face
-					//Triangle 1
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					//Triangle 2
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-
-					//Right face
-					//Triangle 1
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					//Triangle 2
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-
-					//Left face
-					//Triangle 1
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					//Triangle 2
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
-					colors.push_back(vec3(1, 1, 1));
+					int red = volume[(x + y * width + z * height*width) * 4];
+					int green = volume[(x + y * width + z * height*width) * 4 + 1];
+					int blue = volume[(x + y * width + z * height*width) * 4 + 2];
+					
+					vec3 color = vec3(red / 255.0, green / 255.0, blue / 255.0);
+					
+					//Add a color for each vertex
+					for (unsigned int i = 0; i < 36; i++) {
+						colors.push_back(color);
+					}
 				}
-
 			}
 		}
 	}
