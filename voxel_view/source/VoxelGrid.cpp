@@ -40,201 +40,226 @@ bool VoxelGrid::loadVoxels(const char * path){
 //to the vertices array. You may want to use this function (or add
 //similar functions to the VoxelGrid class) to organize your code.
 void VoxelGrid::addCube(vec3 pos) {
+	//4TH ELEMENT IS 1 FOR VERTICES
+	//Back face
+	//Triangle 1	
+	vertices.push_back(vec4(0, 0, 0, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(0, 1, 0, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 0, 0, 1) + vec4(pos, 0));
+	//Triangle 2
+	vertices.push_back(vec4(0, 1, 0, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 0, 0, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 1, 0, 1) + vec4(pos, 0));
 
+	//Front face
+	//Triangle 1
+	vertices.push_back(vec4(0, 0, 1, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(0, 1, 1, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 0, 1, 1) + vec4(pos, 0));
+	//Triangle 2
+	vertices.push_back(vec4(0, 1, 1, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 0, 1, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 1, 1, 1) + vec4(pos, 0));
+
+
+	//Top Face
+	//Triangle 1
+	vertices.push_back(vec4(0, 1, 0, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(0, 1, 1, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 1, 0, 1) + vec4(pos, 0));
+	//Triangle 2
+	vertices.push_back(vec4(0, 1, 1, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 1, 0, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 1, 1, 1) + vec4(pos, 0));
+
+	//Bottom Face
+	//Triangle 1
+	vertices.push_back(vec4(0, 0, 0, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(0, 0, 1, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 0, 0, 1) + vec4(pos, 0));
+	//Triangle 2
+	vertices.push_back(vec4(0, 0, 1, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 0, 0, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 0, 1, 1) + vec4(pos, 0));
+
+	//Right Face
+	//Triangle 1
+	vertices.push_back(vec4(1, 0, 0, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 0, 1, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 1, 0, 1) + vec4(pos, 0));
+	//Triangle 2
+	vertices.push_back(vec4(1, 0, 1, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 1, 0, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(1, 1, 1, 1) + vec4(pos, 0));
+
+	//Left Face
+	//Triangle 1
+	vertices.push_back(vec4(0, 0, 0, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(0, 0, 1, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(0, 1, 0, 1) + vec4(pos, 0));
+	//Triangle 2
+	vertices.push_back(vec4(0, 0, 1, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(0, 1, 0, 1) + vec4(pos, 0));
+	vertices.push_back(vec4(0, 1, 1, 1) + vec4(pos, 0));
 }
 
 //TODO
 //Create a triangulated version of the voxel grid for rendering and populate
 //the vertices array.
 void VoxelGrid::createMesh(){
-	//4TH ELEMENT IS 1 FOR VERTICES
-	
-	//Back face
-	//Triangle 1	
-	vertices.push_back(vec4(0, 0, 0, 1));
-	vertices.push_back(vec4(0, 1, 0, 1));
-	vertices.push_back(vec4(1, 0, 0, 1));
-	//Triangle 2
-	vertices.push_back(vec4(0, 1, 0, 1));
-	vertices.push_back(vec4(1, 0, 0, 1));
-	vertices.push_back(vec4(1, 1, 0, 1));
-
-	//Front face
-	//Triangle 1
-	vertices.push_back(vec4(0, 0, 1, 1));
-	vertices.push_back(vec4(0, 1, 1, 1));
-	vertices.push_back(vec4(1, 0, 1, 1));
-	//Triangle 2
-	vertices.push_back(vec4(0, 1, 1, 1));
-	vertices.push_back(vec4(1, 0, 1, 1));
-	vertices.push_back(vec4(1, 1, 1, 1));
-
-
-	//Top Face
-	//Triangle 1
-	vertices.push_back(vec4(0, 1, 0, 1));
-	vertices.push_back(vec4(0, 1, 1, 1));
-	vertices.push_back(vec4(1, 1, 0, 1));
-	//Triangle 2
-	vertices.push_back(vec4(0, 1, 1, 1));
-	vertices.push_back(vec4(1, 1, 0, 1));
-	vertices.push_back(vec4(1, 1, 1, 1));
-
-	//Bottom Face
-	//Triangle 1
-	vertices.push_back(vec4(0, 0, 0, 1));
-	vertices.push_back(vec4(0, 0, 1, 1));
-	vertices.push_back(vec4(1, 0, 0, 1));
-	//Triangle 2
-	vertices.push_back(vec4(0, 0, 1, 1));
-	vertices.push_back(vec4(1, 0, 0, 1));
-	vertices.push_back(vec4(1, 0, 1, 1));
-
-	//Right Face
-	//Triangle 1
-	vertices.push_back(vec4(1, 0, 0, 1));
-	vertices.push_back(vec4(1, 0, 1, 1));
-	vertices.push_back(vec4(1, 1, 0, 1));
-	//Triangle 2
-	vertices.push_back(vec4(1, 0, 1, 1));
-	vertices.push_back(vec4(1, 1, 0, 1));
-	vertices.push_back(vec4(1, 1, 1, 1));
-
-	//Left Face
-	//Triangle 1
-	vertices.push_back(vec4(0, 0, 0, 1));
-	vertices.push_back(vec4(0, 0, 1, 1));
-	vertices.push_back(vec4(0, 1, 0, 1));
-	//Triangle 2
-	vertices.push_back(vec4(0, 0, 1, 1));
-	vertices.push_back(vec4(0, 1, 0, 1));
-	vertices.push_back(vec4(0, 1, 1, 1));
+	for (unsigned int x = 0; x < width; x++) {
+		for (unsigned int y = 0; y < height; y++) {
+			for (unsigned int z = 0; z < depth; z++) {
+				if (volume[(x + y * width + z * width*height) * 4 + 3] != 0) {
+					addCube(vec3(x, y, z));
+				}
+			}
+		}
+	}
 }
 
 //TODO
 //Populate the normal array with vertice normals for the triangle mesh
 void VoxelGrid::createNormals(){
-	//Back face
-	//Triangle 1
-	normals.push_back(vec3(0, 0, -1));
-	normals.push_back(vec3(0, 0, -1));
-	normals.push_back(vec3(0, 0, -1));
-	//Triangle 2
-	normals.push_back(vec3(0, 0, -1));
-	normals.push_back(vec3(0, 0, -1));
-	normals.push_back(vec3(0, 0, -1));
+	for (unsigned int x = 0; x < width; x++) {
+		for (unsigned int y = 0; y < height; y++) {
+			for (unsigned int z = 0; z < depth; z++) {
+				if (volume[(x + y * width + z * width*height) * 4 + 3] != 0) {
+					//Back face
+					//Triangle 1
+					normals.push_back(vec3(0, 0, -1));
+					normals.push_back(vec3(0, 0, -1));
+					normals.push_back(vec3(0, 0, -1));
+					//Triangle 2
+					normals.push_back(vec3(0, 0, -1));
+					normals.push_back(vec3(0, 0, -1));
+					normals.push_back(vec3(0, 0, -1));
 
-	//Front face
-	//Triangle 1
-	normals.push_back(vec3(0, 0, 1));
-	normals.push_back(vec3(0, 0, 1));
-	normals.push_back(vec3(0, 0, 1));
-	//Triangle 2
-	normals.push_back(vec3(0, 0, 1));
-	normals.push_back(vec3(0, 0, 1));
-	normals.push_back(vec3(0, 0, 1));
+					//Front face
+					//Triangle 1
+					normals.push_back(vec3(0, 0, 1));
+					normals.push_back(vec3(0, 0, 1));
+					normals.push_back(vec3(0, 0, 1));
+					//Triangle 2
+					normals.push_back(vec3(0, 0, 1));
+					normals.push_back(vec3(0, 0, 1));
+					normals.push_back(vec3(0, 0, 1));
 
-	//Top face
-	//Triangle 1
-	normals.push_back(vec3(0, 1, 0));
-	normals.push_back(vec3(0, 1, 0));
-	normals.push_back(vec3(0, 1, 0));
-	//Triangle 2
-	normals.push_back(vec3(0, 1, 0));
-	normals.push_back(vec3(0, 1, 0));
-	normals.push_back(vec3(0, 1, 0));
+					//Top face
+					//Triangle 1
+					normals.push_back(vec3(0, 1, 0));
+					normals.push_back(vec3(0, 1, 0));
+					normals.push_back(vec3(0, 1, 0));
+					//Triangle 2
+					normals.push_back(vec3(0, 1, 0));
+					normals.push_back(vec3(0, 1, 0));
+					normals.push_back(vec3(0, 1, 0));
 
-	//Bottom face
-	//Triangle 1
-	normals.push_back(vec3(0, -1, 0));
-	normals.push_back(vec3(0, -1, 0));
-	normals.push_back(vec3(0, -1, 0));
-	//Triangle 2
-	normals.push_back(vec3(0, -1, 0));
-	normals.push_back(vec3(0, -1, 0));
-	normals.push_back(vec3(0, -1, 0));
+					//Bottom face
+					//Triangle 1
+					normals.push_back(vec3(0, -1, 0));
+					normals.push_back(vec3(0, -1, 0));
+					normals.push_back(vec3(0, -1, 0));
+					//Triangle 2
+					normals.push_back(vec3(0, -1, 0));
+					normals.push_back(vec3(0, -1, 0));
+					normals.push_back(vec3(0, -1, 0));
 
-	//Right face
-	//Triangle 1
-	normals.push_back(vec3(1, 0, 0));
-	normals.push_back(vec3(1, 0, 0));
-	normals.push_back(vec3(1, 0, 0));
-	//Triangle 2
-	normals.push_back(vec3(1, 0, 0));
-	normals.push_back(vec3(1, 0, 0));
-	normals.push_back(vec3(1, 0, 0));
+					//Right face
+					//Triangle 1
+					normals.push_back(vec3(1, 0, 0));
+					normals.push_back(vec3(1, 0, 0));
+					normals.push_back(vec3(1, 0, 0));
+					//Triangle 2
+					normals.push_back(vec3(1, 0, 0));
+					normals.push_back(vec3(1, 0, 0));
+					normals.push_back(vec3(1, 0, 0));
 
-	//Left face
-	//Triangle 1
-	normals.push_back(vec3(-1, 0, 0));
-	normals.push_back(vec3(-1, 0, 0));
-	normals.push_back(vec3(-1, 0, 0));
-	//Triangle 2
-	normals.push_back(vec3(-1, 0, 0));
-	normals.push_back(vec3(-1, 0, 0));
-	normals.push_back(vec3(-1, 0, 0));
+					//Left face
+					//Triangle 1
+					normals.push_back(vec3(-1, 0, 0));
+					normals.push_back(vec3(-1, 0, 0));
+					normals.push_back(vec3(-1, 0, 0));
+					//Triangle 2
+					normals.push_back(vec3(-1, 0, 0));
+					normals.push_back(vec3(-1, 0, 0));
+					normals.push_back(vec3(-1, 0, 0));
+				}
+			}
+		}
+	}
+
 }
 
 //TODO
 //Populate the color array with vertice colors for the triangle mesh
 void VoxelGrid::createColors(){
-	//Back face
-	//Triangle 1
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	//Triangle 2
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
+	for (unsigned int x = 0; x < width; x++) {
+		for (unsigned int y = 0; y < height; y++) {
+			for (unsigned int z = 0; z < depth; z++) {
+				if (volume[(x + y * width + z * width*height) * 4 + 3] != 0) {
+					//Back face
+					//Triangle 1
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					//Triangle 2
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
 
-	//Front face
-	//Triangle 1
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	//Triangle 2
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
+					//Front face
+					//Triangle 1
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					//Triangle 2
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
 
-	//Top face
-	//Triangle 1
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	//Triangle 2
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));	
-	
-	//Bottom face
-	//Triangle 1
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	//Triangle 2
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	
-	//Right face
-	//Triangle 1
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	//Triangle 2
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
+					//Top face
+					//Triangle 1
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					//Triangle 2
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
 
-	//Left face
-	//Triangle 1
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	//Triangle 2
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
-	colors.push_back(vec3(1, 1, 1));
+					//Bottom face
+					//Triangle 1
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					//Triangle 2
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+
+					//Right face
+					//Triangle 1
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					//Triangle 2
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+
+					//Left face
+					//Triangle 1
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					//Triangle 2
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+					colors.push_back(vec3(1, 1, 1));
+				}
+
+			}
+		}
+	}
 }

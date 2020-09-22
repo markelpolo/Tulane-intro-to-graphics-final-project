@@ -28,7 +28,7 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/source/common/SourcePath.cpp.in ${CMAKE_SOURC
 include_directories(${CMAKE_SOURCE_DIR}/source/common
 						  ${CMAKE_SOURCE_DIR}/source
 						  ${CMAKE_SOURCE_DIR}/shaders)
-add_executable(voxel_view WIN32 MACOSX_BUNDLE
+add_executable(voxel_view MACOSX_BUNDLE
 	source/voxel_view.cpp
 	source/VoxelGrid.cpp
 	source/VoxelGrid.h
