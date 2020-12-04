@@ -1,6 +1,5 @@
 #include "common.h"
-
-
+#include <filesystem>
 
 
 
@@ -8,29 +7,39 @@
 
 bool VoxelGrid::loadVoxels(const char * path){
 
-  //decode
-  unsigned error = voxelgrid_decode(volume, width, height, depth, path);
+	//Load each image found in the directory
+	for (const auto & entry : std::filesystem::directory_iterator(path)) {
+		//decode
+		std::vector<unsigned char> image;
+		unsigned error = lodepng::decode(image, width, height, path);
 
-  //if there's an error, display it
-  if(error){
-      std::cout << "decoder error " << error;
-      std::cout << ": " << voxelgrid_error_text(error) << std::endl;
-    return false;}
-    
-  
-  std::cout << "Volume loaded: " << width << " x " << height << " x " << depth << std::endl;
-  std::cout << (width*height*depth) << " voxels.\n";
-  std::cout << "Volume has " << volume.size()/(width*height*depth) << "color values per voxel.\n";
+		//if there's an error, display it
+		if (error) {
+			std::cout << "decoder error " << error;
+			std::cout << ": " << lodepng_error_text(error) << std::endl;
+			return false;
+		}
 
-  vec3 center = vec3(-(float)width/2.0, -(float)height/2.0, -(float)depth/2.0);
-  double max_dim = (std::max)(width, (std::max)(height, depth));
+		std::cout << "Image loaded: " << width << " x " << height << std::endl;
+		std::cout << image.size() << " pixels.\n";
+		std::cout << "Image has " << image.size() / (width*height) << "color values per pixel.\n";
 
-  model_view = RotateX(-45)*
-               Scale(1.0/max_dim,
-                     1.0/max_dim,
-                     1.0/max_dim)*
-                     Translate(center);  //Orient Model About Center
+		//Add image to volume list
+		for (unsigned int i; i < image.size(); i++) { volume.push_back(image[i]); }
 
+		//Add to depth counter for each image added
+		depth++;
+	}
+
+
+	vec3 center = vec3(-(float)width / 2.0, -(float)height / 2.0, -(float)depth/ 2.0);
+	double max_dim = float max(width, height, depth);
+
+	model_view = RotateX(-45)*
+		Scale(1.0 / max_dim,
+			1.0 / max_dim,
+			1.0 / max_dim)*
+		Translate(center);  //Orient Model About Center
   return true;
 
 }

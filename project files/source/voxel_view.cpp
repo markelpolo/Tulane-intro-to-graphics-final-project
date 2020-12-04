@@ -18,17 +18,21 @@ color4 material_diffuse( 0.2, 0.6, 0.0, 1.0 );
 color4 material_specular( 0.8, 0.8, 0.8, 1.0 );
 float  material_shininess = 10;
 
-
+/*
 enum{_IMAGE_1, _IMAGE_2, _IMAGE_3, _TOTAL_IMAGES};
 std::string files[_TOTAL_IMAGES] = {"/models/three.qb",
                                     "/models/palmtree.qb",
                                     "/models/goldisle.qb",};
+*/
+std::string folder = "/images";
 
 
-
-std::vector < VoxelGrid > voxelgrid;
-std::vector < GLuint > buffer;
-std::vector < GLuint > vao;
+//std::vector < VoxelGrid > voxelgrid;
+//std::vector < GLuint > buffer;
+//std::vector < GLuint > vao;
+VoxelGrid voxelgrid((source_path + folder).c_str()); 
+GLuint buffer;
+GLuint vao;
 GLuint ModelView_loc, NormalMatrix_loc, Projection_loc;
 bool wireframe;
 int current_draw;
@@ -60,9 +64,11 @@ static void error_callback(int error, const char* description)
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GLFW_TRUE);
+  /*
   if (key == GLFW_KEY_SPACE && action == GLFW_PRESS){
     current_draw = (current_draw+1)%_TOTAL_IMAGES;
   }
+  */
   if (key == GLFW_KEY_W && action == GLFW_PRESS){
     wireframe = !wireframe;
   }
@@ -185,6 +191,34 @@ void init(){
   Projection_loc = glGetUniformLocation( program, "Projection" );
   
   //===== Send data to GPU ======
+  //Need a single vertex array
+  glGenVertexArrays(1, &vao);
+  glGenBuffers(1, &buffer);
+  glBindVertexArray(vao);
+  glBindBuffer(GL_ARRAY_BUFFER, buffer);
+  unsigned int vertices_bytes = voxelgrid.vertices.size() * sizeof(vec4);
+  unsigned int colors_bytes = voxelgrid.colors.size() * sizeof(vec3);
+  unsigned int normals_bytes = voxelgrid.normals.size() * sizeof(vec3);
+
+  glBufferData(GL_ARRAY_BUFFER, vertices_bytes + colors_bytes + normals_bytes, NULL, GL_STATIC_DRAW);
+  unsigned int offset = 0;
+  glBufferSubData(GL_ARRAY_BUFFER, offset, vertices_bytes, &voxelgrid.vertices[0]);
+  offset += vertices_bytes;
+  glBufferSubData(GL_ARRAY_BUFFER, offset, colors_bytes, &voxelgrid.colors[0]);
+  offset += colors_bytes;
+  glBufferSubData(GL_ARRAY_BUFFER, offset, normals_bytes, &voxelgrid.normals[0]);
+
+  glEnableVertexAttribArray(vColor);
+  glEnableVertexAttribArray(vPosition);
+  glEnableVertexAttribArray(vNormal);
+  
+  glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+  if (colors_bytes > 0)
+	glVertexAttribPointer(vColor, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(static_cast<size_t>(vertices_bytes)));
+  if (normals_bytes > 0)
+	glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(static_cast<size_t>(vertices_bytes + colors_bytes)));
+
+  /*
   vao.resize(_TOTAL_IMAGES);
   glGenVertexArrays( _TOTAL_IMAGES, &vao[0] );
   
@@ -219,6 +253,7 @@ void init(){
       glVertexAttribPointer( vNormal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(static_cast<size_t>(vertices_bytes + colors_bytes)) );
 
   }
+  */
   
   //===== End: Send data to GPU ======
 
@@ -330,14 +365,14 @@ int main(void){
     
 
     // ====== Draw ======
-    glBindVertexArray(vao[current_draw]);
+    glBindVertexArray(vao);
     //glBindBuffer( GL_ARRAY_BUFFER, buffer[current_draw] );
     
-    glUniformMatrix4fv( ModelView_loc, 1, GL_TRUE, user_MV*voxelgrid[current_draw].model_view);
+    glUniformMatrix4fv( ModelView_loc, 1, GL_TRUE, user_MV*voxelgrid.model_view);
     glUniformMatrix4fv( Projection_loc, 1, GL_TRUE, projection );
-    glUniformMatrix4fv( NormalMatrix_loc, 1, GL_TRUE, transpose(invert(user_MV*voxelgrid[current_draw].model_view)));
+    glUniformMatrix4fv( NormalMatrix_loc, 1, GL_TRUE, transpose(invert(user_MV*voxelgrid.model_view)));
 
-    glDrawArrays( GL_TRIANGLES, 0, voxelgrid[current_draw].vertices.size() );
+    glDrawArrays( GL_TRIANGLES, 0, voxelgrid.vertices.size() );
     // ====== End: Draw ======
 
     

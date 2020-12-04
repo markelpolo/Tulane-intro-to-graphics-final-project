@@ -6,4 +6,4 @@
 
 #include "SourcePath.h"
 
-std::string source_path = "C:/Users/andre/OneDrive/Coursework/Fall 2020/Intro to Computer Graphics/module-volumetric-models-andrew-markel/voxel_view";
+std::string source_path = "C:/Users/andre/OneDrive/Coursework/Fall 2020/Intro to Computer Graphics/Final Project/project files";

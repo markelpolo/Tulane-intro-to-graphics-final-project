@@ -42,6 +42,8 @@ add_executable(voxel_view MACOSX_BUNDLE
 	source/common/Trackball.cpp
 	source/common/Trackball.h
 	source/common/vec.h
+	source/common/lodepng.cpp
+	source/common/lodepng.h
 	shaders/fshader.glsl
     shaders/vshader.glsl)
 

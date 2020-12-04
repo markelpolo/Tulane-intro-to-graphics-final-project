@@ -19,10 +19,10 @@
 #include <limits>
 #include <string.h>
 #include <algorithm>
-
+#include <lodepng.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
+#include <filesystem>
 
 //  Define M_PI in the case it's not defined in the math header file
 #ifndef M_PI
