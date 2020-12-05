@@ -18,9 +18,11 @@ public:
   std::vector < vec3 > colors;
   
   mat4 model_view;
-  
+
   VoxelGrid(const char * path) : model_view(){
-    if(loadVoxels(path)){
+	  std::cout << path << std::endl;
+	  depth = 0;
+	  if(loadVoxels(path)){
       createMesh();
       createNormals();
       createColors();

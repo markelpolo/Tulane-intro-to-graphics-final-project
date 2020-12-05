@@ -18,21 +18,21 @@ color4 material_diffuse( 0.2, 0.6, 0.0, 1.0 );
 color4 material_specular( 0.8, 0.8, 0.8, 1.0 );
 float  material_shininess = 10;
 
-/*
-enum{_IMAGE_1, _IMAGE_2, _IMAGE_3, _TOTAL_IMAGES};
-std::string files[_TOTAL_IMAGES] = {"/models/three.qb",
+
+enum{ _TOTAL_IMAGES = 1};
+/*std::string files[_TOTAL_IMAGES] = {"/models/three.qb",
                                     "/models/palmtree.qb",
                                     "/models/goldisle.qb",};
 */
-std::string folder = "/images";
+std::string folder = "/images/";
 
 
-//std::vector < VoxelGrid > voxelgrid;
-//std::vector < GLuint > buffer;
-//std::vector < GLuint > vao;
-VoxelGrid voxelgrid((source_path + folder).c_str()); 
-GLuint buffer;
-GLuint vao;
+std::vector < VoxelGrid > voxelgrid;
+std::vector < GLuint > buffer;
+std::vector < GLuint > vao;
+//VoxelGrid voxelgrid;
+//GLuint buffer;
+//GLuint vao;
 GLuint ModelView_loc, NormalMatrix_loc, Projection_loc;
 bool wireframe;
 int current_draw;
@@ -192,6 +192,7 @@ void init(){
   
   //===== Send data to GPU ======
   //Need a single vertex array
+  /*
   glGenVertexArrays(1, &vao);
   glGenBuffers(1, &buffer);
   glBindVertexArray(vao);
@@ -217,16 +218,18 @@ void init(){
 	glVertexAttribPointer(vColor, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(static_cast<size_t>(vertices_bytes)));
   if (normals_bytes > 0)
 	glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(static_cast<size_t>(vertices_bytes + colors_bytes)));
-
-  /*
+  */
+  
   vao.resize(_TOTAL_IMAGES);
   glGenVertexArrays( _TOTAL_IMAGES, &vao[0] );
   
   buffer.resize(_TOTAL_IMAGES);
   glGenBuffers( _TOTAL_IMAGES, &buffer[0] );
   
-  for(unsigned int i=0; i < _TOTAL_IMAGES; i++){
-    voxelgrid.push_back((source_path + files[i]).c_str());
+  //for(unsigned int i=0; i < _TOTAL_IMAGES; i++){
+  int i = 0;
+  std::cout << source_path + folder << std::endl;
+    voxelgrid.push_back((source_path + folder).c_str());
 
     glBindVertexArray( vao[i] );
     glBindBuffer( GL_ARRAY_BUFFER, buffer[i] );
@@ -252,8 +255,8 @@ void init(){
     if (normals_bytes > 0)
       glVertexAttribPointer( vNormal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(static_cast<size_t>(vertices_bytes + colors_bytes)) );
 
-  }
-  */
+  //}
+  
   
   //===== End: Send data to GPU ======
 
@@ -365,6 +368,15 @@ int main(void){
     
 
     // ====== Draw ======
+	glBindVertexArray(vao[current_draw]);
+	//glBindBuffer( GL_ARRAY_BUFFER, buffer[current_draw] );
+
+	glUniformMatrix4fv(ModelView_loc, 1, GL_TRUE, user_MV*voxelgrid[current_draw].model_view);
+	glUniformMatrix4fv(Projection_loc, 1, GL_TRUE, projection);
+	glUniformMatrix4fv(NormalMatrix_loc, 1, GL_TRUE, transpose(invert(user_MV*voxelgrid[current_draw].model_view)));
+
+	glDrawArrays(GL_TRIANGLES, 0, voxelgrid[current_draw].vertices.size());
+	/*
     glBindVertexArray(vao);
     //glBindBuffer( GL_ARRAY_BUFFER, buffer[current_draw] );
     
@@ -373,6 +385,7 @@ int main(void){
     glUniformMatrix4fv( NormalMatrix_loc, 1, GL_TRUE, transpose(invert(user_MV*voxelgrid.model_view)));
 
     glDrawArrays( GL_TRIANGLES, 0, voxelgrid.vertices.size() );
+	*/
     // ====== End: Draw ======
 
     

@@ -1,5 +1,4 @@
 #include "common.h"
-#include <filesystem>
 
 
 
@@ -10,8 +9,10 @@ bool VoxelGrid::loadVoxels(const char * path){
 	//Load each image found in the directory
 	for (const auto & entry : std::filesystem::directory_iterator(path)) {
 		//decode
+		
 		std::vector<unsigned char> image;
-		unsigned error = lodepng::decode(image, width, height, path);
+		std::filesystem::path path_e = entry.path();
+		unsigned error = lodepng::decode(image, width, height, path_e.string());
 
 		//if there's an error, display it
 		if (error) {
@@ -25,10 +26,11 @@ bool VoxelGrid::loadVoxels(const char * path){
 		std::cout << "Image has " << image.size() / (width*height) << "color values per pixel.\n";
 
 		//Add image to volume list
-		for (unsigned int i; i < image.size(); i++) { volume.push_back(image[i]); }
+		for (unsigned int i = 0; i < image.size(); i++) { volume.push_back(image[i]); }
 
 		//Add to depth counter for each image added
 		depth++;
+		break;
 	}
 
 
