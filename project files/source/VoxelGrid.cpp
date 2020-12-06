@@ -1,9 +1,6 @@
 #include "common.h"
 
 
-
-
-
 bool VoxelGrid::loadVoxels(const char * path){
 
 	//Load each image found in the directory
@@ -30,14 +27,15 @@ bool VoxelGrid::loadVoxels(const char * path){
 
 		//Add to depth counter for each image added
 		depth++;
-		break;
+
+		if (depth > 10) { break; }
 	}
 
 
 	vec3 center = vec3(-(float)width / 2.0, -(float)height / 2.0, -(float)depth/ 2.0);
 	double max_dim = float max(width, height, depth);
 
-	model_view = RotateX(-45)*
+	model_view = RotateX(180)*
 		Scale(1.0 / max_dim,
 			1.0 / max_dim,
 			1.0 / max_dim)*
@@ -212,8 +210,8 @@ void VoxelGrid::createColors(){
 					int red = volume[(x + y * width + z * height*width) * 4];
 					int green = volume[(x + y * width + z * height*width) * 4 + 1];
 					int blue = volume[(x + y * width + z * height*width) * 4 + 2];
-					
-					vec3 color = vec3(red / 255.0, green / 255.0, blue / 255.0);
+					double alpha = (red + blue + green) / 3.0;
+					vec4 color = vec4(red / 255.0, green / 255.0, blue / 255.0, 0.0);
 					
 					//Add a color for each vertex
 					for (unsigned int i = 0; i < 36; i++) {

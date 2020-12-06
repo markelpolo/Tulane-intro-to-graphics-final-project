@@ -11,11 +11,12 @@ class VoxelGrid{
 public:
   unsigned int width, height, depth;
   std::vector<unsigned char> volume;
+  //std::vector < Object * > cubes;
   
   //Add these manually
   std::vector < vec4 > vertices;
   std::vector < vec3 > normals;
-  std::vector < vec3 > colors;
+  std::vector < vec4 > colors;
   
   mat4 model_view;
 

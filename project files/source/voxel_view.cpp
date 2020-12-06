@@ -18,7 +18,6 @@ color4 material_diffuse( 0.2, 0.6, 0.0, 1.0 );
 color4 material_specular( 0.8, 0.8, 0.8, 1.0 );
 float  material_shininess = 10;
 
-
 enum{ _TOTAL_IMAGES = 1};
 /*std::string files[_TOTAL_IMAGES] = {"/models/three.qb",
                                     "/models/palmtree.qb",
@@ -139,6 +138,251 @@ void mouse_move(GLFWwindow* window, double x, double y){
 }
 
 
+// Raytracing Functions
+/*
+//Recursion depth for raytracer
+
+int maxDepth = 3;
+
+namespace GLState {
+	int window_width, window_height;
+
+	bool render_line;
+
+	std::vector < GLuint > objectVao;
+	std::vector < GLuint > objectBuffer;
+
+	GLuint vPosition, vNormal, vTexCoord;
+
+	GLuint program;
+
+	// Model-view and projection matrices uniform location
+	GLuint  ModelView, ModelViewLight, NormalMatrix, Projection;
+
+	//==========Trackball Variables==========
+	static float curquat[4], lastquat[4];
+	/// current transformation matrix 
+	static float curmat[4][4];
+	mat4 curmat_a;
+	/// actual operation 
+	static int scaling;
+	static int moving;
+	static int panning;
+	/// starting "moving" coordinates 
+	static int beginx, beginy;
+	/// ortho 
+	float ortho_x, ortho_y;
+	/// current scale factor 
+	static float scalefactor;
+
+	mat4  projection;
+	mat4 sceneModelView;
+
+	color4 light_ambient;
+	color4 light_diffuse;
+	color4 light_specular;
+
+};
+
+bool write_image(const char* filename, const unsigned char *Src,
+	int Width, int Height, int channels) {
+	unsigned bitdepth = 8;
+	LodePNGColorType color_type;
+	unsigned result;
+	switch (channels)
+	{
+	case 1:
+		color_type = LCT_GREY; break;
+	case 2:
+		color_type = LCT_GREY_ALPHA; break;
+	case 3:
+		color_type = LCT_RGB; break;
+	default:
+		color_type = LCT_RGBA; break;
+	}
+	result = lodepng_encode_file(filename, Src,
+		static_cast<unsigned int>(Width), static_cast<unsigned int>(Height),
+		color_type, bitdepth);
+	if (result == 0)
+		std::cerr << "finished writing " << filename << "." << std::endl;
+	else
+		std::cerr << "write to " << filename << " returned error code " << result << ". ("
+		<< lodepng_error_text(result) << ")" << std::endl;
+	return result == 0;
+}
+
+
+
+std::vector < vec4 > findRay(GLdouble x, GLdouble y) {
+
+	y = GLState::window_height - y;
+
+	int viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+
+	GLdouble modelViewMatrix[16];
+	GLdouble projectionMatrix[16];
+	for (unsigned int i = 0; i < 4; i++) {
+		for (unsigned int j = 0; j < 4; j++) {
+			modelViewMatrix[j * 4 + i] = GLState::sceneModelView[i][j];
+			projectionMatrix[j * 4 + i] = GLState::projection[i][j];
+		}
+	}
+
+
+	GLdouble nearPlaneLocation[3];
+	_gluUnProject(x, y, 0.0, modelViewMatrix, projectionMatrix,
+		viewport, &nearPlaneLocation[0], &nearPlaneLocation[1],
+		&nearPlaneLocation[2]);
+
+	GLdouble farPlaneLocation[3];
+	_gluUnProject(x, y, 1.0, modelViewMatrix, projectionMatrix,
+		viewport, &farPlaneLocation[0], &farPlaneLocation[1],
+		&farPlaneLocation[2]);
+
+
+	vec4 ray_origin = vec4(nearPlaneLocation[0], nearPlaneLocation[1], nearPlaneLocation[2], 1.0);
+	vec3 temp = vec3(farPlaneLocation[0] - nearPlaneLocation[0],
+		farPlaneLocation[1] - nearPlaneLocation[1],
+		farPlaneLocation[2] - nearPlaneLocation[2]);
+	temp = normalize(temp);
+	vec4 ray_dir = vec4(temp.x, temp.y, temp.z, 0.0);
+
+	std::vector < vec4 > result(2);
+	result[0] = ray_origin;
+	result[1] = ray_dir;
+
+	return result;
+}
+
+bool intersectionSort(Object::IntersectionValues i, Object::IntersectionValues j) {
+	return (i.t_w < j.t_w);
+}
+
+
+vec4 castRay(vec4 p0, vec4 dir, Object *lastHitObject, int depth) {
+	vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+
+	//TODO: Raytracing code here
+	if (depth > maxDepth) { return color; }
+
+	//CALL FUNCTION RECURSIVELY FOR REFLECTIONS (not in this one)
+	//CLICK TO DO RAYTRACE DEBUG
+	//PRESS R TO DO RAYTRACE FOR THE WHOLE IMAGE
+	//Choose to cast ray scheme based on material properties
+
+	//Check for intersection with each object
+	//create a list of the world space coordinates of intersections
+	std::vector<Object::IntersectionValues> intersections;
+	Object::IntersectionValues min_intersection;
+	Object::IntersectionValues current_intersection;
+	for (unsigned int i = 0; i < sceneObjects.size(); i++) {
+		current_intersection = sceneObjects[i]->intersect(p0, dir);
+		current_intersection.ID_ = i;
+		intersections.push_back(current_intersection);
+
+		if (i == 0) {
+			min_intersection = current_intersection;
+		}
+		else if (intersectionSort(current_intersection, min_intersection)) {
+			min_intersection = current_intersection;
+		}
+	}
+
+	if (min_intersection.t_w != std::numeric_limits<double>::infinity()) {
+		if (!shadowFeeler(min_intersection.P_w, NULL)) {
+			Object *hitObject = sceneObjects[min_intersection.ID_];
+			Object::ShadingValues shading = hitObject->shadingValues;
+
+			//Intersection point
+			vec4 P = min_intersection.P_w;
+			//Surface normal at P
+			vec4 N = min_intersection.N_w;
+			//Vector pointing to light from P
+			vec4 L = normalize(lightPosition - P); L.w = 0;
+			//The reverse direction of the point coordinate.
+			vec4 V = normalize(-P); V.w = 0.0;
+			//Reflection of the light about the normal
+			vec4 R = normalize(-reflect(L, N));
+
+			float Kd = shading.Kd;
+			float Ka = shading.Ka;
+			float Ks = shading.Ks;
+			float Kn = shading.Kn;
+			float Kt = shading.Kt;
+
+
+
+			float D = max(dot(L, N), 0.0);
+			float S = pow(max(dot(V, R), 0.0), Kn);
+
+			vec4 I = lightColor;
+			vec4 diffuse_color = shading.color; diffuse_color.w = 1.0;
+			vec4 specular_color = vec4(Ks, Ks, Ks, 1.0);
+			vec4 ambient_color = vec4(Ka, Ka, Ka, 1.0);
+			color += Kd * D * diffuse_color + S * specular_color + ambient_color;
+		}
+		else {
+			color = vec4(0.0, 0.0, 0.0, 1.0);
+		}
+	}
+
+	color.x = fmin(color.x, 1.0);
+	color.y = fmin(color.y, 1.0);
+	color.z = fmin(color.z, 1.0);
+	color.w = fmin(color.w, 1.0);
+	return color;
+
+}
+
+void castRayDebug(vec4 p0, vec4 dir) {
+	vec4 color = castRay(p0, dir, NULL, 0);
+	//std::cout << color << std::endl << std::endl;
+	/*
+  std::vector < Object::IntersectionValues > intersections;
+
+  for(unsigned int i=0; i < sceneObjects.size(); i++){
+	intersections.push_back(sceneObjects[i]->intersect(p0, dir));
+	intersections[intersections.size()-1].ID_ = i;
+  }
+
+  for(unsigned int i=0; i < intersections.size(); i++){
+	if(intersections[i].t_w != std::numeric_limits< double >::infinity()){
+	  std::cout << "Hit " << intersections[i].name << " " << intersections[i].ID_ << "\n";
+	  std::cout << "P: " <<  intersections[i].P_w << "\n";
+	  std::cout << "N: " <<  intersections[i].N_w << "\n";
+	  vec4 L = lightPosition-intersections[i].P_w;
+	  L  = normalize(L);
+	  std::cout << "L: " << L << "\n";
+	}
+  }
+  
+}
+
+void rayTrace() {
+
+	unsigned char *buffer = new unsigned char[GLState::window_width*GLState::window_height * 4];
+
+	for (unsigned int i = 0; i < GLState::window_width; i++) {
+		for (unsigned int j = 0; j < GLState::window_height; j++) {
+
+			int idx = j * GLState::window_width + i;
+			std::vector < vec4 > ray_o_dir = findRay(i, j);
+			vec4 color = castRay(ray_o_dir[0], vec4(ray_o_dir[1].x, ray_o_dir[1].y, ray_o_dir[1].z, 0.0), NULL, 0);
+			buffer[4 * idx] = color.x * 255;
+			buffer[4 * idx + 1] = color.y * 255;
+			buffer[4 * idx + 2] = color.z * 255;
+			buffer[4 * idx + 3] = color.w * 255;
+		}
+	}
+
+	write_image("output.png", buffer, GLState::window_width, GLState::window_height, 4);
+
+	delete[] buffer;
+}
+*/
+
+
 void init(){
   
   std::string vshader = source_path + "/shaders/vshader.glsl";
@@ -234,7 +478,7 @@ void init(){
     glBindVertexArray( vao[i] );
     glBindBuffer( GL_ARRAY_BUFFER, buffer[i] );
     unsigned int vertices_bytes = voxelgrid[i].vertices.size()*sizeof(vec4);
-    unsigned int colors_bytes  = voxelgrid[i].colors.size()*sizeof(vec3);
+    unsigned int colors_bytes  = voxelgrid[i].colors.size()*sizeof(vec4);
     unsigned int normals_bytes  = voxelgrid[i].normals.size()*sizeof(vec3);
     
     glBufferData( GL_ARRAY_BUFFER, vertices_bytes + colors_bytes + normals_bytes, NULL, GL_STATIC_DRAW );
@@ -251,7 +495,7 @@ void init(){
 
     glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
     if (colors_bytes > 0)
-      glVertexAttribPointer( vColor, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(static_cast<size_t>(vertices_bytes)) );
+      glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(static_cast<size_t>(vertices_bytes)) );
     if (normals_bytes > 0)
       glVertexAttribPointer( vNormal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(static_cast<size_t>(vertices_bytes + colors_bytes)) );
 
