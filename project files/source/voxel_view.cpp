@@ -8,9 +8,11 @@ typedef vec4 color4;
 
 // Initialize shader lighting parameters
 vec4 light(   0.0, 0.0, 10.0, 1.0 );
-color4 light_ambient(  0.1, 0.1, 0.1, 1.0 );
-color4 light_diffuse(  1.0, 1.0, 1.0, 1.0 );
-color4 light_specular( 1.0, 1.0, 1.0, 1.0 );
+color4 light_ambient(  0.1, 0.1, 0.1, 0.1 );
+color4 light_diffuse(0.0);
+color4 light_specular(0.0);
+//color4 light_diffuse(  1.0, 1.0, 1.0, 1.0 );
+//color4 light_specular( 1.0, 1.0, 1.0, 1.0 );
 
 // Initialize shader material parameters
 color4 material_ambient( 0.1, 0.1, 0.1, 1.0 );
@@ -509,7 +511,10 @@ void init(){
   glEnable( GL_DEPTH_TEST );
   glShadeModel(GL_SMOOTH);
 
-  glClearColor( 0.8, 0.8, 1.0, 1.0 );
+  //glClearColor( 0.8, 0.8, 1.0, 1.0 );
+  glClearColor( 0.0, 0.0, 0.0, 0.0 );
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
   
   //===== Initalize some program state variables ======
 

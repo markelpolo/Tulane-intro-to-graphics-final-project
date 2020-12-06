@@ -25,8 +25,8 @@ public:
 	  depth = 0;
 	  if(loadVoxels(path)){
       createMesh();
-      createNormals();
-      createColors();
+      //createNormals();
+      //createColors();
     }
   }
   
@@ -36,8 +36,8 @@ public:
   
   void addCube(vec3 pos);
   void createMesh();
-  void createNormals();
-  void createColors();
+  //void createNormals();
+  //void createColors();
   
   friend std::ostream& operator << ( std::ostream& os, const VoxelGrid& v ) {
     os << "Vertices:\n";
