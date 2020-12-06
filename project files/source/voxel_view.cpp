@@ -9,10 +9,8 @@ typedef vec4 color4;
 // Initialize shader lighting parameters
 vec4 light(   0.0, 0.0, 10.0, 1.0 );
 color4 light_ambient(  0.1, 0.1, 0.1, 0.1 );
-color4 light_diffuse(0.0);
-color4 light_specular(0.0);
-//color4 light_diffuse(  1.0, 1.0, 1.0, 1.0 );
-//color4 light_specular( 1.0, 1.0, 1.0, 1.0 );
+color4 light_diffuse(  1.0, 1.0, 1.0, 1.0 );
+color4 light_specular( 1.0, 1.0, 1.0, 1.0 );
 
 // Initialize shader material parameters
 color4 material_ambient( 0.1, 0.1, 0.1, 1.0 );
@@ -20,23 +18,19 @@ color4 material_diffuse( 0.2, 0.6, 0.0, 1.0 );
 color4 material_specular( 0.8, 0.8, 0.8, 1.0 );
 float  material_shininess = 10;
 
-enum{ _TOTAL_IMAGES = 1};
-/*std::string files[_TOTAL_IMAGES] = {"/models/three.qb",
-                                    "/models/palmtree.qb",
-                                    "/models/goldisle.qb",};
-*/
-std::string folder = "/images/";
-
-
-std::vector < VoxelGrid > voxelgrid;
+enum{ _TOTAL_MODELS = 1};
+std::vector <std::string> folder;
+std::vector < VoxelGrid * > voxelgrid;
 std::vector < GLuint > buffer;
 std::vector < GLuint > vao;
-//VoxelGrid voxelgrid;
-//GLuint buffer;
-//GLuint vao;
 GLuint ModelView_loc, NormalMatrix_loc, Projection_loc;
 bool wireframe;
-int current_draw;
+int current_model;
+
+//Variables for perspective
+int width, height;
+mat4  projection;
+mat4 model_view;
 
 //==========Trackball Variables==========
 static float curquat[4],lastquat[4];
@@ -55,137 +49,7 @@ float ortho_x, ortho_y;
 static float scalefactor;
 bool lbutton_down;
 
-
-static void error_callback(int error, const char* description)
-{
-  fprintf(stderr, "Error: %s\n", description);
-}
-
-//User interaction handler
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    glfwSetWindowShouldClose(window, GLFW_TRUE);
-  /*
-  if (key == GLFW_KEY_SPACE && action == GLFW_PRESS){
-    current_draw = (current_draw+1)%_TOTAL_IMAGES;
-  }
-  */
-  if (key == GLFW_KEY_W && action == GLFW_PRESS){
-    wireframe = !wireframe;
-  }
-}
-
-//User interaction handler
-static void mouse_click(GLFWwindow* window, int button, int action, int mods){
-  
-  if (GLFW_RELEASE == action){
-    moving=scaling=panning=false;
-    return;
-  }
-  
-  if( mods & GLFW_MOD_SHIFT){
-    scaling=true;
-  }else if( mods & GLFW_MOD_ALT ){
-    panning=true;
-  }else{
-    moving=true;
-    trackball(lastquat, 0, 0, 0, 0);
-  }
-  
-  double xpos, ypos;
-  glfwGetCursorPos(window, &xpos, &ypos);
-  beginx = xpos; beginy = ypos;
-}
-
-//User interaction handler
-void mouse_move(GLFWwindow* window, double x, double y){
-  
-  int W, H;
-  glfwGetFramebufferSize(window, &W, &H);
-
-  
-  float dx=(x-beginx)/(float)W;
-  float dy=(beginy-y)/(float)H;
-  
-  if (panning)
-    {
-    ortho_x  +=dx;
-    ortho_y  +=dy;
-    
-    beginx = x; beginy = y;
-    return;
-    }
-  else if (scaling)
-    {
-    scalefactor *= (1.0f+dx);
-    
-    beginx = x;beginy = y;
-    return;
-    }
-  else if (moving)
-    {
-    trackball(lastquat,
-              (2.0f * beginx - W) / W,
-              (H - 2.0f * beginy) / H,
-              (2.0f * x - W) / W,
-              (H - 2.0f * y) / H
-              );
-    
-    add_quats(lastquat, curquat, curquat);
-    build_rotmatrix(curmat, curquat);
-    
-    beginx = x;beginy = y;
-    return;
-    }
-}
-
-
 // Raytracing Functions
-/*
-//Recursion depth for raytracer
-
-int maxDepth = 3;
-
-namespace GLState {
-	int window_width, window_height;
-
-	bool render_line;
-
-	std::vector < GLuint > objectVao;
-	std::vector < GLuint > objectBuffer;
-
-	GLuint vPosition, vNormal, vTexCoord;
-
-	GLuint program;
-
-	// Model-view and projection matrices uniform location
-	GLuint  ModelView, ModelViewLight, NormalMatrix, Projection;
-
-	//==========Trackball Variables==========
-	static float curquat[4], lastquat[4];
-	/// current transformation matrix 
-	static float curmat[4][4];
-	mat4 curmat_a;
-	/// actual operation 
-	static int scaling;
-	static int moving;
-	static int panning;
-	/// starting "moving" coordinates 
-	static int beginx, beginy;
-	/// ortho 
-	float ortho_x, ortho_y;
-	/// current scale factor 
-	static float scalefactor;
-
-	mat4  projection;
-	mat4 sceneModelView;
-
-	color4 light_ambient;
-	color4 light_diffuse;
-	color4 light_specular;
-
-};
-
 bool write_image(const char* filename, const unsigned char *Src,
 	int Width, int Height, int channels) {
 	unsigned bitdepth = 8;
@@ -216,8 +80,8 @@ bool write_image(const char* filename, const unsigned char *Src,
 
 
 std::vector < vec4 > findRay(GLdouble x, GLdouble y) {
-
-	y = GLState::window_height - y;
+	
+	y = height - y;
 
 	int viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
@@ -226,8 +90,8 @@ std::vector < vec4 > findRay(GLdouble x, GLdouble y) {
 	GLdouble projectionMatrix[16];
 	for (unsigned int i = 0; i < 4; i++) {
 		for (unsigned int j = 0; j < 4; j++) {
-			modelViewMatrix[j * 4 + i] = GLState::sceneModelView[i][j];
-			projectionMatrix[j * 4 + i] = GLState::projection[i][j];
+			modelViewMatrix[j * 4 + i] = voxelgrid[current_model]->model_view[i][j];
+			projectionMatrix[j * 4 + i] = projection[i][j];
 		}
 	}
 
@@ -249,7 +113,7 @@ std::vector < vec4 > findRay(GLdouble x, GLdouble y) {
 		farPlaneLocation[2] - nearPlaneLocation[2]);
 	temp = normalize(temp);
 	vec4 ray_dir = vec4(temp.x, temp.y, temp.z, 0.0);
-
+	
 	std::vector < vec4 > result(2);
 	result[0] = ray_origin;
 	result[1] = ray_dir;
@@ -257,29 +121,20 @@ std::vector < vec4 > findRay(GLdouble x, GLdouble y) {
 	return result;
 }
 
-bool intersectionSort(Object::IntersectionValues i, Object::IntersectionValues j) {
+bool intersectionSort(Voxel::IntersectionValues i, Voxel::IntersectionValues j) {
 	return (i.t_w < j.t_w);
 }
 
 
-vec4 castRay(vec4 p0, vec4 dir, Object *lastHitObject, int depth) {
+vec4 castRay(vec4 p0, vec4 dir, Voxel *lastHitVoxel, int depth) {
 	vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-
-	//TODO: Raytracing code here
-	if (depth > maxDepth) { return color; }
-
-	//CALL FUNCTION RECURSIVELY FOR REFLECTIONS (not in this one)
-	//CLICK TO DO RAYTRACE DEBUG
-	//PRESS R TO DO RAYTRACE FOR THE WHOLE IMAGE
-	//Choose to cast ray scheme based on material properties
-
-	//Check for intersection with each object
-	//create a list of the world space coordinates of intersections
-	std::vector<Object::IntersectionValues> intersections;
-	Object::IntersectionValues min_intersection;
-	Object::IntersectionValues current_intersection;
-	for (unsigned int i = 0; i < sceneObjects.size(); i++) {
-		current_intersection = sceneObjects[i]->intersect(p0, dir);
+	/*
+	std::vector<Voxel::IntersectionValues> intersections;
+	Voxel::IntersectionValues min_intersection;
+	Voxel::IntersectionValues current_intersection;
+	std::vector <Voxel*> voxels = voxelgrid[current_model]->voxels;
+	for (unsigned int i = 0; i < voxels.size(); i++) {
+		current_intersection = voxels[i]->intersect(p0, dir);
 		current_intersection.ID_ = i;
 		intersections.push_back(current_intersection);
 
@@ -290,61 +145,28 @@ vec4 castRay(vec4 p0, vec4 dir, Object *lastHitObject, int depth) {
 			min_intersection = current_intersection;
 		}
 	}
-
+	
 	if (min_intersection.t_w != std::numeric_limits<double>::infinity()) {
-		if (!shadowFeeler(min_intersection.P_w, NULL)) {
-			Object *hitObject = sceneObjects[min_intersection.ID_];
-			Object::ShadingValues shading = hitObject->shadingValues;
-
-			//Intersection point
-			vec4 P = min_intersection.P_w;
-			//Surface normal at P
-			vec4 N = min_intersection.N_w;
-			//Vector pointing to light from P
-			vec4 L = normalize(lightPosition - P); L.w = 0;
-			//The reverse direction of the point coordinate.
-			vec4 V = normalize(-P); V.w = 0.0;
-			//Reflection of the light about the normal
-			vec4 R = normalize(-reflect(L, N));
-
-			float Kd = shading.Kd;
-			float Ka = shading.Ka;
-			float Ks = shading.Ks;
-			float Kn = shading.Kn;
-			float Kt = shading.Kt;
-
-
-
-			float D = max(dot(L, N), 0.0);
-			float S = pow(max(dot(V, R), 0.0), Kn);
-
-			vec4 I = lightColor;
-			vec4 diffuse_color = shading.color; diffuse_color.w = 1.0;
-			vec4 specular_color = vec4(Ks, Ks, Ks, 1.0);
-			vec4 ambient_color = vec4(Ka, Ka, Ka, 1.0);
-			color += Kd * D * diffuse_color + S * specular_color + ambient_color;
-		}
-		else {
-			color = vec4(0.0, 0.0, 0.0, 1.0);
-		}
+		color = voxels[min_intersection.ID_]->shadingValues.color;
 	}
 
 	color.x = fmin(color.x, 1.0);
 	color.y = fmin(color.y, 1.0);
 	color.z = fmin(color.z, 1.0);
 	color.w = fmin(color.w, 1.0);
+	nearest_oxel
 	return color;
-
+	
 }
 
 void castRayDebug(vec4 p0, vec4 dir) {
 	vec4 color = castRay(p0, dir, NULL, 0);
-	//std::cout << color << std::endl << std::endl;
+	std::cout << color << std::endl << std::endl;
 	/*
-  std::vector < Object::IntersectionValues > intersections;
+  std::vector < Voxel::IntersectionValues > intersections;
 
-  for(unsigned int i=0; i < sceneObjects.size(); i++){
-	intersections.push_back(sceneObjects[i]->intersect(p0, dir));
+  for(unsigned int i=0; i < voxelgrid[current_model].voxels.size(); i++){
+	intersections.push_back(sceneVoxels[i]->intersect(p0, dir));
 	intersections[intersections.size()-1].ID_ = i;
   }
 
@@ -353,22 +175,22 @@ void castRayDebug(vec4 p0, vec4 dir) {
 	  std::cout << "Hit " << intersections[i].name << " " << intersections[i].ID_ << "\n";
 	  std::cout << "P: " <<  intersections[i].P_w << "\n";
 	  std::cout << "N: " <<  intersections[i].N_w << "\n";
-	  vec4 L = lightPosition-intersections[i].P_w;
+	  vec4 L = light_position-intersections[i].P_w;
 	  L  = normalize(L);
 	  std::cout << "L: " << L << "\n";
 	}
   }
-  
+  */
 }
 
 void rayTrace() {
 
-	unsigned char *buffer = new unsigned char[GLState::window_width*GLState::window_height * 4];
+	unsigned char *buffer = new unsigned char[width*height * 4];
 
-	for (unsigned int i = 0; i < GLState::window_width; i++) {
-		for (unsigned int j = 0; j < GLState::window_height; j++) {
+	for (unsigned int i = 0; i < width; i++) {
+		for (unsigned int j = 0; j < height; j++) {
 
-			int idx = j * GLState::window_width + i;
+			int idx = j * width + i;
 			std::vector < vec4 > ray_o_dir = findRay(i, j);
 			vec4 color = castRay(ray_o_dir[0], vec4(ray_o_dir[1].x, ray_o_dir[1].y, ray_o_dir[1].z, 0.0), NULL, 0);
 			buffer[4 * idx] = color.x * 255;
@@ -378,15 +200,106 @@ void rayTrace() {
 		}
 	}
 
-	write_image("output.png", buffer, GLState::window_width, GLState::window_height, 4);
+	write_image("output.png", buffer, width, height, 4);
 
 	delete[] buffer;
 }
-*/
+
+static void error_callback(int error, const char* description)
+{
+	fprintf(stderr, "Error: %s\n", description);
+}
+
+//User interaction handler
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	/*
+	if (key == GLFW_KEY_R && action == GLFW_PRESS){
+	  raytrace();
+	}
+	*/
+	if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+		wireframe = !wireframe;
+	}
+}
+
+//User interaction handler
+static void mouse_click(GLFWwindow* window, int button, int action, int mods) {
+
+	if (GLFW_RELEASE == action) {
+		moving = scaling = panning = false;
+		return;
+	}
+
+	if (mods & GLFW_MOD_SHIFT) {
+		scaling = true;
+	}
+	else if (mods & GLFW_MOD_ALT) {
+		panning = true;
+	}
+	else {
+		moving = true;
+		trackball(lastquat, 0, 0, 0, 0);
+	}
+
+	double xpos, ypos;
+	glfwGetCursorPos(window, &xpos, &ypos);
+	beginx = xpos; beginy = ypos;
+
+	//Debugging the raycast function
+	std::vector < vec4 > ray_o_dir = findRay(xpos, ypos);
+	castRayDebug(ray_o_dir[0], vec4(ray_o_dir[1].x, ray_o_dir[1].y, ray_o_dir[1].z, 0.0));
+}
+
+//User interaction handler
+void mouse_move(GLFWwindow* window, double x, double y) {
+
+	int W, H;
+	glfwGetFramebufferSize(window, &W, &H);
+
+
+	float dx = (x - beginx) / (float)W;
+	float dy = (beginy - y) / (float)H;
+
+	if (panning)
+	{
+		ortho_x += dx;
+		ortho_y += dy;
+
+		beginx = x; beginy = y;
+		return;
+	}
+	else if (scaling)
+	{
+		scalefactor *= (1.0f + dx);
+
+		beginx = x; beginy = y;
+		return;
+	}
+	else if (moving)
+	{
+		trackball(lastquat,
+			(2.0f * beginx - W) / W,
+			(H - 2.0f * beginy) / H,
+			(2.0f * x - W) / W,
+			(H - 2.0f * y) / H
+		);
+
+		add_quats(lastquat, curquat, curquat);
+		build_rotmatrix(curmat, curquat);
+
+		beginx = x; beginy = y;
+		return;
+	}
+}
 
 
 void init(){
-  
+	//Settings for muliple models
+  folder.push_back("/images/");
+  current_model = 0;
+
   std::string vshader = source_path + "/shaders/vshader.glsl";
   std::string fshader = source_path + "/shaders/fshader.glsl";
   
@@ -437,59 +350,31 @@ void init(){
   Projection_loc = glGetUniformLocation( program, "Projection" );
   
   //===== Send data to GPU ======
-  //Need a single vertex array
-  /*
-  glGenVertexArrays(1, &vao);
-  glGenBuffers(1, &buffer);
-  glBindVertexArray(vao);
-  glBindBuffer(GL_ARRAY_BUFFER, buffer);
-  unsigned int vertices_bytes = voxelgrid.vertices.size() * sizeof(vec4);
-  unsigned int colors_bytes = voxelgrid.colors.size() * sizeof(vec3);
-  unsigned int normals_bytes = voxelgrid.normals.size() * sizeof(vec3);
-
-  glBufferData(GL_ARRAY_BUFFER, vertices_bytes + colors_bytes + normals_bytes, NULL, GL_STATIC_DRAW);
-  unsigned int offset = 0;
-  glBufferSubData(GL_ARRAY_BUFFER, offset, vertices_bytes, &voxelgrid.vertices[0]);
-  offset += vertices_bytes;
-  glBufferSubData(GL_ARRAY_BUFFER, offset, colors_bytes, &voxelgrid.colors[0]);
-  offset += colors_bytes;
-  glBufferSubData(GL_ARRAY_BUFFER, offset, normals_bytes, &voxelgrid.normals[0]);
-
-  glEnableVertexAttribArray(vColor);
-  glEnableVertexAttribArray(vPosition);
-  glEnableVertexAttribArray(vNormal);
   
-  glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-  if (colors_bytes > 0)
-	glVertexAttribPointer(vColor, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(static_cast<size_t>(vertices_bytes)));
-  if (normals_bytes > 0)
-	glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(static_cast<size_t>(vertices_bytes + colors_bytes)));
-  */
+  vao.resize(_TOTAL_MODELS);
+  glGenVertexArrays( _TOTAL_MODELS, &vao[0] );
   
-  vao.resize(_TOTAL_IMAGES);
-  glGenVertexArrays( _TOTAL_IMAGES, &vao[0] );
+  buffer.resize(_TOTAL_MODELS);
+  glGenBuffers( _TOTAL_MODELS, &buffer[0] );
   
-  buffer.resize(_TOTAL_IMAGES);
-  glGenBuffers( _TOTAL_IMAGES, &buffer[0] );
-  
-  //for(unsigned int i=0; i < _TOTAL_IMAGES; i++){
-  int i = 0;
-  std::cout << source_path + folder << std::endl;
-    voxelgrid.push_back((source_path + folder).c_str());
+  for(unsigned int i=0; i < _TOTAL_MODELS; i++){
+    std::cout << source_path + folder[i] << std::endl;
+	VoxelGrid* grid = new VoxelGrid((source_path + folder[i]).c_str());
+    voxelgrid.push_back(grid);
 
     glBindVertexArray( vao[i] );
     glBindBuffer( GL_ARRAY_BUFFER, buffer[i] );
-    unsigned int vertices_bytes = voxelgrid[i].vertices.size()*sizeof(vec4);
-    unsigned int colors_bytes  = voxelgrid[i].colors.size()*sizeof(vec4);
-    unsigned int normals_bytes  = voxelgrid[i].normals.size()*sizeof(vec3);
+    unsigned int vertices_bytes = grid->vertices.size()*sizeof(vec4);
+    unsigned int colors_bytes  = grid->colors.size()*sizeof(vec4);
+    unsigned int normals_bytes  = grid->normals.size()*sizeof(vec3);
     
     glBufferData( GL_ARRAY_BUFFER, vertices_bytes + colors_bytes + normals_bytes, NULL, GL_STATIC_DRAW );
     unsigned int offset = 0;
-    glBufferSubData( GL_ARRAY_BUFFER, offset, vertices_bytes, &voxelgrid[i].vertices[0] );
+    glBufferSubData( GL_ARRAY_BUFFER, offset, vertices_bytes, &grid->vertices[0] );
     offset += vertices_bytes;
-    glBufferSubData( GL_ARRAY_BUFFER, offset, colors_bytes,  &voxelgrid[i].colors[0] );
+    glBufferSubData( GL_ARRAY_BUFFER, offset, colors_bytes,  &grid->colors[0] );
     offset += colors_bytes;
-    glBufferSubData( GL_ARRAY_BUFFER, offset, normals_bytes,  &voxelgrid[i].normals[0] );
+    glBufferSubData( GL_ARRAY_BUFFER, offset, normals_bytes,  &grid->normals[0] );
     
     glEnableVertexAttribArray( vColor );
     glEnableVertexAttribArray( vPosition );
@@ -501,7 +386,7 @@ void init(){
     if (normals_bytes > 0)
       glVertexAttribPointer( vNormal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(static_cast<size_t>(vertices_bytes + colors_bytes)) );
 
-  //}
+  }
   
   
   //===== End: Send data to GPU ======
@@ -534,7 +419,7 @@ void init(){
   scalefactor = 1.0;
   
   wireframe = false;
-  current_draw = 0;
+  current_model = 0;
   
   lbutton_down = false;
 
@@ -560,7 +445,7 @@ int main(void){
   
   glfwWindowHint(GLFW_SAMPLES, 4);
   
-  window = glfwCreateWindow(512, 512, "Assignment 5 - Volumetric Models", NULL, NULL);
+  window = glfwCreateWindow(512, 512, "JPEG Volume Renderer", NULL, NULL);
   if (!window){
     glfwTerminate();
     exit(EXIT_FAILURE);
@@ -578,8 +463,6 @@ int main(void){
   
   init();
   
-
-  
   while (!glfwWindowShouldClose(window)){
     
     //Display as wirfram, boolean tied to keystoke 'w'
@@ -589,14 +472,14 @@ int main(void){
       glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     }
     
-    int width, height;
+    
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
     
     GLfloat aspect = GLfloat(width)/height;
     
     //Projection matrix
-    mat4  projection = Perspective( 45.0, aspect, 0.5, 5.0 );
+    projection = Perspective( 45.0, aspect, 0.5, 5.0 );
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -617,24 +500,15 @@ int main(void){
     
 
     // ====== Draw ======
-	glBindVertexArray(vao[current_draw]);
+	glBindVertexArray(vao[current_model]);
 	//glBindBuffer( GL_ARRAY_BUFFER, buffer[current_draw] );
 
-	glUniformMatrix4fv(ModelView_loc, 1, GL_TRUE, user_MV*voxelgrid[current_draw].model_view);
+	glUniformMatrix4fv(ModelView_loc, 1, GL_TRUE, user_MV*voxelgrid[current_model]->model_view);
 	glUniformMatrix4fv(Projection_loc, 1, GL_TRUE, projection);
-	glUniformMatrix4fv(NormalMatrix_loc, 1, GL_TRUE, transpose(invert(user_MV*voxelgrid[current_draw].model_view)));
+	glUniformMatrix4fv(NormalMatrix_loc, 1, GL_TRUE, transpose(invert(user_MV*voxelgrid[current_model]->model_view)));
 
-	glDrawArrays(GL_TRIANGLES, 0, voxelgrid[current_draw].vertices.size());
-	/*
-    glBindVertexArray(vao);
-    //glBindBuffer( GL_ARRAY_BUFFER, buffer[current_draw] );
-    
-    glUniformMatrix4fv( ModelView_loc, 1, GL_TRUE, user_MV*voxelgrid.model_view);
-    glUniformMatrix4fv( Projection_loc, 1, GL_TRUE, projection );
-    glUniformMatrix4fv( NormalMatrix_loc, 1, GL_TRUE, transpose(invert(user_MV*voxelgrid.model_view)));
+	glDrawArrays(GL_TRIANGLES, 0, voxelgrid[current_model]->vertices.size());
 
-    glDrawArrays( GL_TRIANGLES, 0, voxelgrid.vertices.size() );
-	*/
     // ====== End: Draw ======
 
     
