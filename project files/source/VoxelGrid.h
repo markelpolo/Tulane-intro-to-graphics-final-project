@@ -4,6 +4,7 @@
 #define __VOXELGRID__
 
 #include "common.h"
+#include "Voxel.h"
 
 using namespace Angel;
 
@@ -11,7 +12,7 @@ class VoxelGrid{
 public:
   unsigned int width, height, depth;
   std::vector<unsigned char> volume;
-  //std::vector < Object * > cubes;
+  std::vector < Voxel * > voxels;
   
   //Add these manually
   std::vector < vec4 > vertices;

@@ -30,6 +30,8 @@ include_directories(${CMAKE_SOURCE_DIR}/source/common
 						  ${CMAKE_SOURCE_DIR}/shaders)
 add_executable(voxel_view MACOSX_BUNDLE
 	source/voxel_view.cpp
+	source/Voxel.cpp
+	source/Voxel.h
 	source/VoxelGrid.cpp
 	source/VoxelGrid.h
 	source/common/common.h

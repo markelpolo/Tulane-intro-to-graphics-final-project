@@ -24,6 +24,7 @@
 #include <GLFW/glfw3.h>
 #include <filesystem>
 
+
 //  Define M_PI in the case it's not defined in the math header file
 #ifndef M_PI
 #  define M_PI  3.14159265358979323846
@@ -116,5 +117,5 @@ static void check_program_link(GLuint program){
 #include "Trackball.h"
 #include "readvoxel.h"
 #include "VoxelGrid.h"
-
+#include "Voxel.h"
 #endif /* common_h */

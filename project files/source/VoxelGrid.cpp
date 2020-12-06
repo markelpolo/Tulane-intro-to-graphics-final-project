@@ -176,6 +176,7 @@ void VoxelGrid::createMesh() {
 				int red = volume[(x + y * width + z * height*width) * 4];
 				int green = volume[(x + y * width + z * height*width) * 4 + 1];
 				int blue = volume[(x + y * width + z * height*width) * 4 + 2];
+				Voxel *voxel = new Voxel();
 
 				if ((red + blue + green) > 0) {
 					double alpha = (red + blue + green) / 3.0;
@@ -184,8 +185,21 @@ void VoxelGrid::createMesh() {
 					for (unsigned int i = 0; i < 36; i++) {
 						colors.push_back(color);
 					}
+					
+					//Adding voxels for MIP raycast
+					Voxel::ShadingValues *shading = new Voxel::ShadingValues;
+					shading->color = color;
+					shading->Kd = 1.0;
+					voxel->setShadingValues(*shading);
+					voxel->setModelView(model_view * Translate(x, y, z));
+					voxels.push_back(voxel);
+
+					//Adding cube for visualization
 					addCube(vec3(x, y, z));
-				}				
+				}	
+				else {
+					voxels.push_back(new Voxel());
+				}
 			}
 		}
 	}
