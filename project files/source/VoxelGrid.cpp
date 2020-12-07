@@ -32,7 +32,7 @@ bool VoxelGrid::loadVoxels(const char * path){
 	}
 
 
-	vec3 center = vec3(-(float)width / 2.0, -(float)height / 2.0, -(float)depth/ 2.0);
+	center = vec3(-(float)width / 2.0, -(float)height / 2.0, -(float)depth/ 2.0);
 	double max_dim = float max(width, height, depth);
 
 	model_view = RotateX(180)*
@@ -191,7 +191,7 @@ void VoxelGrid::createMesh() {
 					shading->color = color;
 					shading->Kd = 1.0;
 					voxel->setShadingValues(*shading);
-					voxel->setModelView(model_view * Translate(x, y, z));
+					voxel->setModelView(Translate(vec3(x, y, z)));
 					voxels.push_back(voxel);
 
 					//Adding cube for visualization

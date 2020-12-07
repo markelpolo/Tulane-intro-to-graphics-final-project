@@ -271,7 +271,6 @@ static void check_program_link(GLuint program) {
 }
 
 #include "Trackball.h"
-#include "readvoxel.h"
 #include "VoxelGrid.h"
 #include "Voxel.h"
 #endif /* common_h */

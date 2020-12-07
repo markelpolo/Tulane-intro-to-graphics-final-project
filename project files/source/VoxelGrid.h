@@ -19,6 +19,8 @@ public:
   std::vector < vec3 > normals;
   std::vector < vec4 > colors;
   
+  vec3 center;
+
   mat4 model_view;
 
   VoxelGrid(const char * path) : model_view(){

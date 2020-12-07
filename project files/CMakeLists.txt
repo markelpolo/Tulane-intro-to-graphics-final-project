@@ -6,20 +6,19 @@ if (!MSVC)
 SET(CMAKE_CXX_FLAGS "-Wno-deprecated")
 endif()
 
+#Setting target C++ version to 17
+#set_property(TARGET tgt PROPERTY CXX_STANDARD 17)
+
 #Compile and Link GLFW
 ADD_SUBDIRECTORY(glfw-3.2)
 link_libraries(glfw)
 include_directories(${glfw_INCLUDE_DIRS})
 include_directories("${CMAKE_SOURCE_DIR}/glfw-3.2/deps")
-include_directories("${CMAKE_SOURCE_DIR}/qbvoxel/include")
 
 add_library(glad "${CMAKE_SOURCE_DIR}/glfw-3.2/deps/glad/glad.h"
          		 "${CMAKE_SOURCE_DIR}/glfw-3.2/deps/glad.c")
 
 link_libraries(glad)
-
-add_subdirectory(qbvoxel)
-link_libraries(qbvoxel)
 
 SET(MY_SOURCE_PATH ${CMAKE_SOURCE_DIR})
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/source/common/SourcePath.cpp.in ${CMAKE_SOURCE_DIR}/source/common/SourcePath.cpp)
@@ -37,8 +36,6 @@ add_executable(voxel_view MACOSX_BUNDLE
 	source/common/common.h
 	source/common/CheckError.h
 	source/common/mat.h
-	source/common/readvoxel.cpp
-	source/common/readvoxel.h
 	source/common/SourcePath.cpp
 	source/common/SourcePath.h
 	source/common/Trackball.cpp

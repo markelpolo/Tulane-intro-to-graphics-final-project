@@ -30,7 +30,7 @@ int current_model;
 //Variables for perspective
 int width, height;
 mat4  projection;
-mat4 model_view;
+mat4  user_MV;
 
 //==========Trackball Variables==========
 static float curquat[4],lastquat[4];
@@ -49,7 +49,7 @@ float ortho_x, ortho_y;
 static float scalefactor;
 bool lbutton_down;
 
-// Raytracing Functions
+
 bool write_image(const char* filename, const unsigned char *Src,
 	int Width, int Height, int channels) {
 	unsigned bitdepth = 8;
@@ -77,8 +77,8 @@ bool write_image(const char* filename, const unsigned char *Src,
 	return result == 0;
 }
 
-
-
+//Raytracing functions
+/*
 std::vector < vec4 > findRay(GLdouble x, GLdouble y) {
 	
 	y = height - y;
@@ -90,7 +90,9 @@ std::vector < vec4 > findRay(GLdouble x, GLdouble y) {
 	GLdouble projectionMatrix[16];
 	for (unsigned int i = 0; i < 4; i++) {
 		for (unsigned int j = 0; j < 4; j++) {
-			modelViewMatrix[j * 4 + i] = voxelgrid[current_model]->model_view[i][j];
+
+			mat4 model_view = user_MV * voxelgrid[current_model]->model_view;
+			modelViewMatrix[j * 4 + i] = model_view[i][j];
 			projectionMatrix[j * 4 + i] = projection[i][j];
 		}
 	}
@@ -128,7 +130,7 @@ bool intersectionSort(Voxel::IntersectionValues i, Voxel::IntersectionValues j) 
 
 vec4 castRay(vec4 p0, vec4 dir, Voxel *lastHitVoxel, int depth) {
 	vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-	/*
+	
 	std::vector<Voxel::IntersectionValues> intersections;
 	Voxel::IntersectionValues min_intersection;
 	Voxel::IntersectionValues current_intersection;
@@ -143,6 +145,7 @@ vec4 castRay(vec4 p0, vec4 dir, Voxel *lastHitVoxel, int depth) {
 		}
 		else if (intersectionSort(current_intersection, min_intersection)) {
 			min_intersection = current_intersection;
+			//std::cout << min_intersection.P_w;
 		}
 	}
 	
@@ -154,7 +157,6 @@ vec4 castRay(vec4 p0, vec4 dir, Voxel *lastHitVoxel, int depth) {
 	color.y = fmin(color.y, 1.0);
 	color.z = fmin(color.z, 1.0);
 	color.w = fmin(color.w, 1.0);
-	nearest_oxel
 	return color;
 	
 }
@@ -162,7 +164,7 @@ vec4 castRay(vec4 p0, vec4 dir, Voxel *lastHitVoxel, int depth) {
 void castRayDebug(vec4 p0, vec4 dir) {
 	vec4 color = castRay(p0, dir, NULL, 0);
 	std::cout << color << std::endl << std::endl;
-	/*
+	
   std::vector < Voxel::IntersectionValues > intersections;
 
   for(unsigned int i=0; i < voxelgrid[current_model].voxels.size(); i++){
@@ -180,7 +182,7 @@ void castRayDebug(vec4 p0, vec4 dir) {
 	  std::cout << "L: " << L << "\n";
 	}
   }
-  */
+  
 }
 
 void rayTrace() {
@@ -204,7 +206,7 @@ void rayTrace() {
 
 	delete[] buffer;
 }
-
+*/
 static void error_callback(int error, const char* description)
 {
 	fprintf(stderr, "Error: %s\n", description);
@@ -216,7 +218,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 	/*
 	if (key == GLFW_KEY_R && action == GLFW_PRESS){
-	  raytrace();
+	  rayTrace();
 	}
 	*/
 	if (key == GLFW_KEY_W && action == GLFW_PRESS) {
@@ -248,8 +250,8 @@ static void mouse_click(GLFWwindow* window, int button, int action, int mods) {
 	beginx = xpos; beginy = ypos;
 
 	//Debugging the raycast function
-	std::vector < vec4 > ray_o_dir = findRay(xpos, ypos);
-	castRayDebug(ray_o_dir[0], vec4(ray_o_dir[1].x, ray_o_dir[1].y, ray_o_dir[1].z, 0.0));
+	//std::vector < vec4 > ray_o_dir = findRay(xpos, ypos);
+	//castRayDebug(ray_o_dir[0], vec4(ray_o_dir[1].x, ray_o_dir[1].y, ray_o_dir[1].z, 0.0));
 }
 
 //User interaction handler
@@ -493,7 +495,7 @@ int main(void){
                             curmat[0][3], curmat[1][3], curmat[2][3], curmat[3][3]);
  
     //Modelview based on user interaction
-    mat4 user_MV  =  Translate( -viewer_pos ) *                    //Move Camera Back to -viewer_pos
+    user_MV  =  Translate( -viewer_pos ) *                    //Move Camera Back to -viewer_pos
                      Translate(ortho_x, ortho_y, 0.0) *            //Pan Camera
                      track_ball *                                  //Rotate Camera
                      Scale(scalefactor,scalefactor,scalefactor);   //User Scale
