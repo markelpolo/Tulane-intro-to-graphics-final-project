@@ -3,10 +3,35 @@
 
 bool VoxelGrid::loadVoxels(const char * path){
 
-	//Load each image found in the directory
+	std::string path_string = std::string(path);
+	int min_frame;
+
+	//Count each image found in the directory
 	for (const auto & entry : std::filesystem::directory_iterator(path)) {
-		//decode
+
+		//Convert image name to integer to use as index
+
+		std::filesystem::path path_e = entry.path();
+		std::string path_string_e = path_e.string();
+		int frame = std::stoi(path_string_e.substr(path_string.size(), path_string_e.size() - 4));
 		
+		if (depth == 0) {
+			min_frame = frame;
+		}
+		else if (frame < min_frame) {
+			min_frame = frame;
+		}
+		//Count the number of files in the directory first
+		//Add to depth counter for each image added
+		depth++;
+
+	}
+
+	//Then assign a list of image data entries 
+	std::vector < std::vector < unsigned char > > images;
+	images.resize(depth);
+	for (const auto & entry : std::filesystem::directory_iterator(path)) {
+		//decode image		
 		std::vector<unsigned char> image;
 		std::filesystem::path path_e = entry.path();
 		unsigned error = lodepng::decode(image, width, height, path_e.string());
@@ -22,20 +47,23 @@ bool VoxelGrid::loadVoxels(const char * path){
 		std::cout << image.size() << " pixels.\n";
 		std::cout << "Image has " << image.size() / (width*height) << "color values per pixel.\n";
 
-		//Add image to volume list
-		for (unsigned int i = 0; i < image.size(); i++) { volume.push_back(image[i]); }
-
-		//Add to depth counter for each image added
-		depth++;
-
-		if (depth > 30) { break; }
+		//Convert image name to integer to use as index
+		std::string path_string_e = path_e.string();
+		int frame = std::stoi(path_string_e.substr(path_string.size(), path_string_e.size() - 4));
+		images[frame - min_frame] = image;
 	}
-
-
+	
+	for (unsigned int i = 0; i < images.size(); i++) { 
+		std::vector<unsigned char> image = images[i];
+		for (unsigned int j = 0; j < image.size(); j++) {
+			volume.push_back(image[j]);
+		}
+	}
+	
 	center = vec3(-(float)width / 2.0, -(float)height / 2.0, -(float)depth/ 2.0);
 	double max_dim = float max(width, height, depth);
 
-	model_view = RotateX(180)*
+	model_view = RotateZ(180) * 
 		Scale(1.0 / max_dim,
 			1.0 / max_dim,
 			1.0 / max_dim)*
@@ -180,19 +208,34 @@ void VoxelGrid::createMesh() {
 
 				if ((red + blue + green) > 0) {
 					double alpha = (red + blue + green) / 3.0;
-					vec4 color = vec4(red / 255.0, green / 255.0, blue / 255.0, 0.0);
+					vec4 color = vec4(red / 255.0, green / 255.0, blue / 255.0, alpha);
 					//Add a color for each vertex
 					for (unsigned int i = 0; i < 36; i++) {
 						colors.push_back(color);
 					}
-					
+
 					//Adding voxels for MIP raycast
 					Voxel::ShadingValues *shading = new Voxel::ShadingValues;
 					shading->color = color;
 					shading->Kd = 1.0;
 					voxel->setShadingValues(*shading);
-					voxel->setModelView(Translate(vec3(x, y, z)));
+					voxel->setModelView(Translate(vec3(x, y, z))); //-y because as y increases, we scale down the y axis 
 					voxels.push_back(voxel);
+
+
+					//Only adding cube if the other cubes around it do not occlude it
+					/*
+					if (x !=0 && x%width != 0){
+					int redx1 = volume[((x + 1) + y * width + z * height*width) * 4];
+					}
+					int redx2 = volume[((x + 1) + y * width + z * height*width) * 4];
+					int redx1 = volume[((x + 1) + y * width + z * height*width) * 4];
+					
+					int redx1 = volume[((x + 1) + y * width + z * height*width) * 4];
+					int redx1 = volume[((x + 1) + y * width + z * height*width) * 4];
+					
+					int redx1 = volume[((x + 1) + y * width + z * height*width) * 4];
+					*/
 
 					//Adding cube for visualization
 					addCube(vec3(x, y, z));

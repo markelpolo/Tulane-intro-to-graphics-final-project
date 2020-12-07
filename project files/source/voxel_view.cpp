@@ -78,7 +78,7 @@ bool write_image(const char* filename, const unsigned char *Src,
 }
 
 //Raytracing functions
-/*
+
 std::vector < vec4 > findRay(GLdouble x, GLdouble y) {
 	
 	y = height - y;
@@ -163,26 +163,7 @@ vec4 castRay(vec4 p0, vec4 dir, Voxel *lastHitVoxel, int depth) {
 
 void castRayDebug(vec4 p0, vec4 dir) {
 	vec4 color = castRay(p0, dir, NULL, 0);
-	std::cout << color << std::endl << std::endl;
-	
-  std::vector < Voxel::IntersectionValues > intersections;
-
-  for(unsigned int i=0; i < voxelgrid[current_model].voxels.size(); i++){
-	intersections.push_back(sceneVoxels[i]->intersect(p0, dir));
-	intersections[intersections.size()-1].ID_ = i;
-  }
-
-  for(unsigned int i=0; i < intersections.size(); i++){
-	if(intersections[i].t_w != std::numeric_limits< double >::infinity()){
-	  std::cout << "Hit " << intersections[i].name << " " << intersections[i].ID_ << "\n";
-	  std::cout << "P: " <<  intersections[i].P_w << "\n";
-	  std::cout << "N: " <<  intersections[i].N_w << "\n";
-	  vec4 L = light_position-intersections[i].P_w;
-	  L  = normalize(L);
-	  std::cout << "L: " << L << "\n";
-	}
-  }
-  
+	std::cout << color << std::endl << std::endl;  
 }
 
 void rayTrace() {
@@ -206,7 +187,7 @@ void rayTrace() {
 
 	delete[] buffer;
 }
-*/
+
 static void error_callback(int error, const char* description)
 {
 	fprintf(stderr, "Error: %s\n", description);
@@ -216,11 +197,11 @@ static void error_callback(int error, const char* description)
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
-	/*
+	
 	if (key == GLFW_KEY_R && action == GLFW_PRESS){
 	  rayTrace();
 	}
-	*/
+	
 	if (key == GLFW_KEY_W && action == GLFW_PRESS) {
 		wireframe = !wireframe;
 	}
@@ -250,8 +231,8 @@ static void mouse_click(GLFWwindow* window, int button, int action, int mods) {
 	beginx = xpos; beginy = ypos;
 
 	//Debugging the raycast function
-	//std::vector < vec4 > ray_o_dir = findRay(xpos, ypos);
-	//castRayDebug(ray_o_dir[0], vec4(ray_o_dir[1].x, ray_o_dir[1].y, ray_o_dir[1].z, 0.0));
+	std::vector < vec4 > ray_o_dir = findRay(xpos, ypos);
+	castRayDebug(ray_o_dir[0], vec4(ray_o_dir[1].x, ray_o_dir[1].y, ray_o_dir[1].z, 0.0));
 }
 
 //User interaction handler
@@ -360,7 +341,7 @@ void init(){
   glGenBuffers( _TOTAL_MODELS, &buffer[0] );
   
   for(unsigned int i=0; i < _TOTAL_MODELS; i++){
-    std::cout << source_path + folder[i] << std::endl;
+    //std::cout << source_path + folder[i] << std::endl;
 	VoxelGrid* grid = new VoxelGrid((source_path + folder[i]).c_str());
     voxelgrid.push_back(grid);
 
